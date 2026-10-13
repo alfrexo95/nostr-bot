@@ -1,0 +1,37 @@
+name: nostr-bot
+on:
+  schedule:
+    - cron: "7 */2 * * *"
+  workflow_dispatch:
+concurrency:
+  group: nostr-bot
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Ejecutar scripts
+        env:
+          NOSTR_NSEC: ${{ secrets.NOSTR_NSEC }}
+        run: |
+          printf '%s' "$NOSTR_NSEC" > nsec.txt
+          bash run_once.sh
+          rm -f nsec.txt
+      - name: Guardar estado
+        run: |
+          git config user.name "nostr-bot"
+          git config user.email "nostr-bot@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "estado $(date -u +%F-%H%M)"
+            git push
+          fi
