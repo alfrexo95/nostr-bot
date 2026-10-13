@@ -23,3 +23,15 @@ if [ "$H" -ge 15 ]; then
     fi
   fi
 fi
+
+# --- valor.py ---
+if [ "$H" -ge 19 ] && [ "$(cat .m_nota 2>/dev/null)" != "$D" ]; then
+  python valor.py nota || true; echo "$D" > .m_nota
+fi
+LASTZ=$(cat .m_zaps 2>/dev/null || echo 0)
+if [ $((NOW - LASTZ)) -ge 7200 ]; then
+  python valor.py zaps || true; date +%s > .m_zaps
+fi
+if [ "$H" -ge 11 ] && { [ "$W" = 1 ] || [ "$W" = 3 ] || [ "$W" = 5 ]; } && [ "$(cat .m_news 2>/dev/null)" != "$D" ]; then
+  python valor.py noticias || true; echo "$D" > .m_news
+fi
