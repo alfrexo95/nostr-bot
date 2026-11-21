@@ -19,6 +19,21 @@ jobs:
       - run: python master_bot.py
         env:
           NOSTR_NSEC: ${{ secrets.NOSTR_NSEC }}
+      - name: Register Nostr Master Bot in Predator Hub (optional)
+        if: ${{ secrets.INFRA_HUB_TOKEN != '' }}
+        continue-on-error: true
+        env:
+          HUB_TOKEN: ${{ secrets.INFRA_HUB_TOKEN }}
+          HUB_URL: https://x402-api-wigc.onrender.com
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail --max-time 15 \
+            -H "Authorization: Bearer $HUB_TOKEN" -H "Content-Type: application/json" \
+            -d '{"agent_id":"nostr-master-bot","platform":"github-actions","capabilities":["nostr.publish","nostr.engage","content"]}' \
+            "$HUB_URL/infra/agents/register"
+          curl --silent --show-error --fail --max-time 15 \
+            -H "Authorization: Bearer $HUB_TOKEN" -H "Content-Type: application/json" \
+            -d '{}' "$HUB_URL/infra/agents/nostr-master-bot/heartbeat"
       - name: Guardar Estado
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
